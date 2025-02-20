@@ -67,7 +67,7 @@ const Settings = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="p-6 bg-white rounded-lg border hover:shadow-md transition-shadow"
+                className="p-6 bg-white cursor-pointer rounded-lg border hover:shadow-md transition-shadow"
               >
                 <div className="flex gap-4">
                   <div className="p-3 bg-primary/10 rounded-lg">

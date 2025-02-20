@@ -1,5 +1,12 @@
-
 import { useState, ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,7 +25,14 @@ interface DashboardProps {
 }
 
 export const Dashboard = ({ children }: DashboardProps) => {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
     <div className="min-h-screen flex">
@@ -52,14 +66,23 @@ export const Dashboard = ({ children }: DashboardProps) => {
                   />
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 ">
                 <Button variant="ghost" size="icon" className="relative">
                   <Bell className="h-5 w-5 text-gray-500" />
                   <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full" />
                 </Button>
-                <Button variant="ghost" size="icon">
-                  <Settings className="h-5 w-5 text-gray-500" />
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <Settings className="h-5 w-5 text-gray-500" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem className="cursor-pointer" onClick={handleLogout}>
+                      Log out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <Button variant="ghost" size="icon">
                   <UserCircle className="h-6 w-6 text-primary" />
                 </Button>

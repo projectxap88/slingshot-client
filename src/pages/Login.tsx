@@ -5,56 +5,35 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { Github, Mail } from "lucide-react";
-import { authService } from "@/services/auth.service";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { Github, Mail, KeyRound, Linkedin } from "lucide-react";
+import { useAuth } from '@/contexts/AuthContext';
 import { PasswordInput } from "@/components/ui/password-input";
 
-interface SignUpFormData {
-  email: string;
-  password: string;
-  confirmPassword: string;
-  // Add other required fields
-}
-
-const SignUp = () => {
+const Login = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [formData, setFormData] = useState<SignUpFormData>({
+  const [formData, setFormData] = useState({
     email: "",
     password: "",
-    confirmPassword: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     setIsLoading(true);
 
     try {
-      if (formData.password !== formData.confirmPassword) {
-        throw new Error("Passwords do not match");
-      }
-
-      const response = await authService.register({
-        email: formData.email,
-        password: formData.password,
+      await login(formData.email, formData.password);
+      toast({
+        title: "Welcome back!",
+        description: "Successfully logged in.",
       });
-if(response){
-  toast({
-    title: "Success!",
-    description: "Account created successfully.",
-  });      // Redirect to onboarding
-  navigate("/verify-otp", { state: { email: formData.email } });
-}
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to sign up";
-      setError(errorMessage);
+      navigate("/");
+    } catch (error) {
       toast({
         title: "Error",
-        description: errorMessage,
+        description: error instanceof Error ? error.message : "Failed to login",
         variant: "destructive",
       });
     } finally {
@@ -75,9 +54,9 @@ if(response){
             alt="Slingshot" 
             className="h-16 w-16 mx-auto mb-6"
           />
-          <h1 className="text-3xl font-semibold mb-3">Create your account</h1>
+          <h1 className="text-3xl font-semibold mb-3">Welcome back</h1>
           <p className="text-gray-600">
-            Join Slingshot to start your AI-powered career journey
+            Log in to continue your career journey
           </p>
         </motion.div>
 
@@ -92,7 +71,7 @@ if(response){
               className="w-full"
               onClick={() => {
                 toast({
-                  title: "GitHub Sign Up",
+                  title: "GitHub Login",
                   description: "Connecting to GitHub...",
                 });
               }}
@@ -105,7 +84,20 @@ if(response){
               className="w-full"
               onClick={() => {
                 toast({
-                  title: "Google Sign Up",
+                  title: "LinkedIn Login",
+                  description: "Connecting to LinkedIn...",
+                });
+              }}
+            >
+              <Linkedin className="mr-2 h-4 w-4" />
+              Continue with LinkedIn
+            </Button>
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => {
+                toast({
+                  title: "Google Login",
                   description: "Connecting to Google...",
                 });
               }}
@@ -113,8 +105,8 @@ if(response){
               <Mail className="mr-2 h-4 w-4" />
               Continue with Google
             </Button>
-          </div>
-
+          </div> */}
+{/* 
           <div className="relative mb-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-200" />
@@ -123,12 +115,6 @@ if(response){
               <span className="bg-white px-4 text-gray-500">Or continue with</span>
             </div>
           </div> */}
-
-          {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-              {error}
-            </div>
-          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
@@ -144,24 +130,27 @@ if(response){
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <Button 
+                  variant="link" 
+                  className="p-0 h-auto text-sm font-normal"
+                  onClick={() => {
+                    toast({
+                      title: "Reset Password",
+                      description: "Password reset functionality coming soon!",
+                    });
+                  }}
+                >
+                  Forgot password?
+                </Button>
+              </div>
               <PasswordInput
                 id="password"
                 required
-                placeholder="Create a password"
+                placeholder="Enter your password"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <PasswordInput
-                id="confirmPassword"
-                required
-                placeholder="Confirm your password"
-                value={formData.confirmPassword}
-                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
               />
             </div>
 
@@ -170,27 +159,19 @@ if(response){
               className="w-full"
               disabled={isLoading}
             >
-              {isLoading ? (
-                <span className="flex items-center justify-center">
-                  <LoadingSpinner size="sm" className="mr-2" />
-                  Signing up...
-                </span>
-              ) : (
-                "Sign up"
-              )}
+              <KeyRound className="mr-2 h-4 w-4" />
+              {isLoading ? "Logging in..." : "Log in"}
             </Button>
           </form>
 
           <p className="text-center text-sm text-gray-500 mt-6">
-            Already have an account?{" "}
+            Don't have an account?{" "}
             <Button 
               variant="link" 
               className="p-0 h-auto font-semibold text-primary"
-              onClick={() => {
-                navigate("/login");
-              }}
+              onClick={() => navigate("/signup")}
             >
-              Sign in
+              Sign up
             </Button>
           </p>
         </motion.div>
@@ -199,4 +180,4 @@ if(response){
   );
 };
 
-export default SignUp;
+export default Login;

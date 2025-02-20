@@ -18,6 +18,8 @@ import {
   Import,
   Check
 } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { onboardingService } from "@/services/onboarding.service";
 
 interface OnboardingModalProps {
   onComplete?: () => void;
@@ -32,8 +34,12 @@ export const OnboardingModal = ({ onComplete }: OnboardingModalProps) => {
     bio: "",
     skills: "",
     cv: null as File | null,
+    cvText: "",
     writingSample: null as File | null,
+    writingSampleText: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const steps = [
     { label: "Professional Profile", completed: currentStep > 1 },
@@ -50,30 +56,120 @@ export const OnboardingModal = ({ onComplete }: OnboardingModalProps) => {
     });
   };
 
-  const handleNext = () => {
-    if (currentStep < 4) {
+  const validateStep = (step: number): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    switch (step) {
+      case 1:
+        if (!formData.fullName.trim()) {
+          newErrors.fullName = "Full name is required";
+        }
+        if (!formData.bio.trim()) {
+          newErrors.bio = "Professional summary is required";
+        }
+        break;
+      case 2:
+        if (!formData.skills.trim()) {
+          newErrors.skills = "Skills are required";
+        }
+        if (!formData.cv && !formData.cvText) {
+          newErrors.cv = "Please upload a CV or provide CV content";
+        }
+        break;
+      case 3:
+        if (!formData.writingSample && !formData.writingSampleText) {
+          newErrors.writingSample = "Please provide a writing sample";
+        }
+        break;
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleNext = async () => {
+    if (!validateStep(currentStep)) {
+      toast({
+        title: "Required Fields",
+        description: "Please fill in all required fields before proceeding.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
       switch (currentStep) {
         case 1:
-          showAILearningToast("AI is analyzing your professional background and building your career profile...");
+          // Update personal info
+          await onboardingService.updatePersonalInfo({
+            fullName: formData.fullName,
+            bio: formData.bio,
+            skills: formData.skills.split(',').map(s => s.trim())
+          });
+          showAILearningToast("AI is analyzing your professional background...");
           break;
+
         case 2:
-          showAILearningToast("AI is processing your experience to identify key strengths and opportunities...");
+          // Handle CV upload/text
+          if (formData.cv) {
+            await onboardingService.uploadDocuments({
+              cv: formData.cv
+            });
+          } else if (formData.cvText) {
+            await onboardingService.saveDocumentText({
+              cvText: formData.cvText
+            });
+          }
+          showAILearningToast("AI is processing your experience...");
           break;
+
         case 3:
-          showAILearningToast("AI is analyzing your communication style to personalize your experience...");
+          // Handle writing sample upload/text
+          if (formData.writingSample) {
+            await onboardingService.uploadDocuments({
+              writingSample: formData.writingSample
+            });
+          } else if (formData.writingSampleText) {
+            await onboardingService.saveDocumentText({
+              writingSampleText: formData.writingSampleText
+            });
+          }
+          showAILearningToast("AI is analyzing your communication style...");
           break;
+
+        case 4:
+          // Complete onboarding
+          await onboardingService.completeOnboarding(formData).then(()=>{
+            toast({
+              title: "Onboarding Complete! 🎉",
+              description: "Your AI-powered career assistant is ready.",
+              duration: 5000,
+            });
+            navigate('/');
+          }).catch((error)=>{
+            toast({
+              title: "Error",
+              description: error instanceof Error ? error.message : "Failed to complete onboarding",
+              variant: "destructive",
+            });
+          });
+      
+          if (onComplete) {
+            onComplete();
+          }
+          return;
       }
+
       setCurrentStep(currentStep + 1);
-    } else {
+    } catch (error) {
       toast({
-        title: "Profile Complete! 🎉",
-        description: "Your AI-powered career assistant is ready to help you succeed.",
-        duration: 5000,
+        title: "Error",
+        description: error instanceof Error ? error.message : "Something went wrong",
+        variant: "destructive",
       });
-      if (onComplete) {
-        onComplete();
-      }
-      navigate('/');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -89,6 +185,48 @@ export const OnboardingModal = ({ onComplete }: OnboardingModalProps) => {
       description: "AI is analyzing and importing your professional data...",
       duration: 3000,
     });
+  };
+
+  const handleComplete = async () => {
+    setIsSubmitting(true);
+    try {
+      // Prepare the onboarding data
+      const onboardingData = {
+        personalInfo: {
+          fullName: formData.fullName,
+          bio: formData.bio,
+        },
+        skills: formData.skills.split(',').map(skill => skill.trim()),
+        documents: {
+          cv: formData.cv,
+          cvText: formData.cvText,
+          writingSample: formData.writingSample,
+          writingSampleText: formData.writingSampleText,
+        }
+      };
+
+      // Submit the onboarding data
+      await onboardingService.completeOnboarding(onboardingData);
+
+      toast({
+        title: "Profile Complete! 🎉",
+        description: "Your AI-powered career assistant is ready to help you succeed.",
+        duration: 5000,
+      });
+
+      if (onComplete) {
+        onComplete();
+      }
+      navigate('/dashboard');
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to complete onboarding",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const renderStepContent = () => {
@@ -132,24 +270,27 @@ export const OnboardingModal = ({ onComplete }: OnboardingModalProps) => {
 
             <div className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
+                <Label htmlFor="fullName">Full Name *</Label>
                 <Input
                   id="fullName"
                   value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                   placeholder="Enter your full name"
-                  className="h-12"
+                  className={errors.fullName ? "border-red-500" : ""}
                 />
+                {errors.fullName && (
+                  <p className="text-sm text-red-500">{errors.fullName}</p>
+                )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="bio">Professional Summary</Label>
+                <Label htmlFor="bio">Professional Summary *</Label>
                 <div className="relative">
                   <Textarea
                     id="bio"
                     value={formData.bio}
                     onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                     placeholder="Tell us about your professional journey and aspirations..."
-                    className="min-h-[120px] pr-12"
+                    className={`min-h-[120px] pr-12 ${errors.bio ? "border-red-500" : ""}`}
                   />
                   <Button
                     variant="ghost"
@@ -160,7 +301,10 @@ export const OnboardingModal = ({ onComplete }: OnboardingModalProps) => {
                     <Lightbulb className="h-4 w-4" />
                   </Button>
                 </div>
-                <p className="text-sm text-gray-500 mt-2">
+                {errors.bio && (
+                  <p className="text-sm text-red-500">{errors.bio}</p>
+                )}
+                <p className="text-sm text-gray-500 mt-2 cursor-pointer">
                   💡 Click the lightbulb for AI-powered writing suggestions
                 </p>
               </div>
@@ -196,10 +340,15 @@ export const OnboardingModal = ({ onComplete }: OnboardingModalProps) => {
             </div>
 
             <FileUpload
+              id="cv-upload"
               label="Upload your CV"
               description="Our AI will analyze your CV to personalize your job recommendations and highlight your strengths."
               accept=".pdf,.doc,.docx"
               onFileSelect={(file) => setFormData({ ...formData, cv: file })}
+              onTextInput={(text) => setFormData({ ...formData, cvText: text })}
+              value={formData.cv}
+              textValue={formData.cvText}
+              textPlaceholder="Paste your CV content here..."
             />
 
             <div className="space-y-2 mt-6">
@@ -242,10 +391,15 @@ export const OnboardingModal = ({ onComplete }: OnboardingModalProps) => {
             </div>
 
             <FileUpload
+              id="writing-sample-upload"
               label="Writing Sample"
               description="This helps our AI create personalized content that matches your tone and style."
               accept=".pdf,.doc,.docx,.txt"
               onFileSelect={(file) => setFormData({ ...formData, writingSample: file })}
+              onTextInput={(text) => setFormData({ ...formData, writingSampleText: text })}
+              value={formData.writingSample}
+              textValue={formData.writingSampleText}
+              textPlaceholder="Paste your writing sample here..."
             />
 
             <div className="bg-primary/5 rounded-xl p-6">
@@ -289,10 +443,10 @@ export const OnboardingModal = ({ onComplete }: OnboardingModalProps) => {
                 <div className="bg-white/60 p-4 rounded-lg">
                   <p className="text-sm font-medium">Uploaded Documents</p>
                   <p className="text-sm text-gray-600 mt-1">
-                    CV: {formData.cv?.name || "Not uploaded"}
+                    CV: {formData.cv?.name || (formData.cvText ? "Text input provided" : "Not provided")}
                   </p>
                   <p className="text-sm text-gray-600 mt-1">
-                    Writing Sample: {formData.writingSample?.name || "Not uploaded"}
+                    Writing Sample: {formData.writingSample?.name || (formData.writingSampleText ? "Text input provided" : "Not provided")}
                   </p>
                 </div>
               </div>
@@ -357,13 +511,28 @@ export const OnboardingModal = ({ onComplete }: OnboardingModalProps) => {
             <Button
               variant="outline"
               onClick={handleBack}
-              disabled={currentStep === 1}
+              disabled={currentStep === 1 || isSubmitting}
               className="w-32"
             >
               Back
             </Button>
-            <Button onClick={handleNext} className="w-32">
-              {currentStep === 4 ? "Complete" : "Next"}
+            <Button 
+              onClick={handleNext} 
+              className="w-32"
+              disabled={isSubmitting}
+            >
+              {currentStep === 4 ? (
+                isSubmitting ? (
+                  <span className="flex items-center justify-center">
+                    <LoadingSpinner size="sm" className="mr-2" />
+                    Completing...
+                  </span>
+                ) : (
+                  "Complete"
+                )
+              ) : (
+                "Next"
+              )}
             </Button>
           </div>
         </motion.div>
