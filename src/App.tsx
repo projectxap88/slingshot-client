@@ -14,7 +14,7 @@ import Onboarding from "./pages/Onboarding";
 import SignUp from "./pages/SignUp";
 import { LogIn } from "lucide-react";
 import Login from "./pages/Login";
-import { AuthProvider } from '@/contexts/AuthContext';
+import { AuthProvider } from '@/contexts/auth.context';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import OtpVerification from "./pages/OtpVerificaition";
 

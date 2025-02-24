@@ -6,12 +6,12 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import { Github, Mail, KeyRound, Linkedin } from "lucide-react";
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/auth.context';
 import { PasswordInput } from "@/components/ui/password-input";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login,user } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -29,7 +29,12 @@ const Login = () => {
         title: "Welcome back!",
         description: "Successfully logged in.",
       });
-      navigate("/");
+      if(user?.onboarding) {
+        navigate("/");
+      }
+      else {
+        navigate("/onboarding") 
+      }
     } catch (error) {
       toast({
         title: "Error",
