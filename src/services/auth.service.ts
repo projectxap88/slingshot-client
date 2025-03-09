@@ -29,6 +29,8 @@ export interface AuthResponse {
   message: string;
 }
 
+
+
 class AuthService {
   private static instance: AuthService;
 
@@ -40,6 +42,11 @@ class AuthService {
     }
     return AuthService.instance;
   }
+
+
+  public  handleGoogleLogin = () => {
+    window.open(`${API_URL}/auth/google`, '_self');
+  };
 
   public async register(data: RegisterData): Promise<AuthResponse> {
     try {
@@ -57,22 +64,7 @@ class AuthService {
     }
   }
 
-  public async googleAuth(token: string, profile: any): Promise<AuthResponse> {
-    try {
-      const response = await axios.post<AuthResponse>(
-        `${API_URL}/auth/google`,
-        { token, profile }
-      );
-      localStorage.setItem('token', response.data.data.token);
-      return response.data;
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        throw new Error(error.response?.data?.message || 'Google authentication failed');
-      }
-      throw error;
-    }
-  }
-
+ 
   public async login(data: LoginData): Promise<void> {
     try {
       const { data: response } = await axios.post<LoginResponse>(`${API_URL}/auth/login`, data);

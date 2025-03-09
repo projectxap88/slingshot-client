@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { Github, Mail } from "lucide-react";
+import { Github, Linkedin, Mail } from "lucide-react";
 import { authService } from "@/services/auth.service";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { PasswordInput } from "@/components/ui/password-input";
@@ -27,6 +27,7 @@ const SignUp = () => {
     password: "",
     confirmPassword: "",
   });
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,7 +87,7 @@ if(response){
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-xl shadow-lg p-8"
         >
-          {/* <div className="space-y-4 mb-6">
+          <div className="space-y-4 mb-6">
             <Button 
               variant="outline" 
               className="w-full"
@@ -97,17 +98,18 @@ if(response){
                 });
               }}
             >
-              <Github className="mr-2 h-4 w-4" />
+              <Linkedin className="mr-2 h-4 w-4" />
               Continue with GitHub
             </Button>
             <Button 
               variant="outline" 
               className="w-full"
               onClick={() => {
-                toast({
-                  title: "Google Sign Up",
-                  description: "Connecting to Google...",
-                });
+                authService.handleGoogleLogin();
+                // toast({
+                //   title: "Google Sign Up",
+                //   description: "Connecting to Google...",
+                // });
               }}
             >
               <Mail className="mr-2 h-4 w-4" />
@@ -122,7 +124,7 @@ if(response){
             <div className="relative flex justify-center text-sm">
               <span className="bg-white px-4 text-gray-500">Or continue with</span>
             </div>
-          </div> */}
+          </div>
 
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">

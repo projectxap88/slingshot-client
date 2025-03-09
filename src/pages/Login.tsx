@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { Github, Mail, KeyRound, Linkedin } from "lucide-react";
 import { useAuth } from '@/contexts/auth.context';
 import { PasswordInput } from "@/components/ui/password-input";
+import { authService } from "@/services/auth.service";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -70,8 +71,8 @@ const Login = () => {
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-xl shadow-lg p-8"
         >
-          {/* <div className="space-y-4 mb-6">
-            <Button 
+          <div className="space-y-4 mb-6">
+            {/* <Button 
               variant="outline" 
               className="w-full"
               onClick={() => {
@@ -96,22 +97,19 @@ const Login = () => {
             >
               <Linkedin className="mr-2 h-4 w-4" />
               Continue with LinkedIn
-            </Button>
+            </Button> */}
             <Button 
               variant="outline" 
               className="w-full"
               onClick={() => {
-                toast({
-                  title: "Google Login",
-                  description: "Connecting to Google...",
-                });
+                authService.handleGoogleLogin();
               }}
             >
               <Mail className="mr-2 h-4 w-4" />
               Continue with Google
             </Button>
-          </div> */}
-{/* 
+          </div>
+
           <div className="relative mb-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-200" />
@@ -119,7 +117,7 @@ const Login = () => {
             <div className="relative flex justify-center text-sm">
               <span className="bg-white px-4 text-gray-500">Or continue with</span>
             </div>
-          </div> */}
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">

@@ -17,6 +17,7 @@ import Login from "./pages/Login";
 import { AuthProvider } from '@/contexts/auth.context';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import OtpVerification from "./pages/OtpVerificaition";
+import AuthRedirect from "./pages/AuthRedirect";
 
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignUp />} />
+            <Route path="/auth-redirect" element={<AuthRedirect/>}/>
             <Route path="/verify-otp" element={<OtpVerification/>}/>
             <Route
               path="/onboarding"

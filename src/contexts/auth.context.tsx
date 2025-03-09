@@ -24,7 +24,9 @@ type AuthAction =
   | { type: 'SET_ERROR'; payload: string }
   | { type: 'LOGOUT' }
   | { type: 'LOGIN_SUCCESS'; payload: User }
-  | { type: 'AUTH_ERROR' };
+  | { type: 'AUTH_ERROR' }
+  | { type: 'OAUTH_SUCCESS', payload: {isAuthenticated:boolean}};
+
 
 // Load initial state from localStorage
 const loadState = (): AuthState => {
@@ -100,6 +102,12 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
           user: null,
           loading: false
         };
+      case 'OAUTH_SUCCESS':
+        return {
+          ...state,
+          isAuthenticated: action.payload.isAuthenticated,
+          loading: false
+        };
       default:
         return state;
     }
@@ -114,6 +122,7 @@ interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   register: (email: string, password: string) => Promise<void>;
+  dispatch: React.Dispatch<AuthAction>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -187,7 +196,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         ...state, 
         login,
         logout,
-        register
+        register,
+        dispatch
       }}
     >
       {children}
