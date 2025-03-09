@@ -88,7 +88,7 @@ if(response){
           className="bg-white rounded-xl shadow-lg p-8"
         >
           <div className="space-y-4 mb-6">
-            <Button 
+            {/* <Button 
               variant="outline" 
               className="w-full"
               onClick={() => {
@@ -100,7 +100,7 @@ if(response){
             >
               <Linkedin className="mr-2 h-4 w-4" />
               Continue with GitHub
-            </Button>
+            </Button> */}
             <Button 
               variant="outline" 
               className="w-full"
